@@ -14,6 +14,8 @@ const api: AxiosInstance = axios.create({
 // 请求拦截器
 api.interceptors.request.use(
   (config) => {
+    // 确保每个请求都携带凭据
+    config.withCredentials = true
     return config
   },
   (error) => {
@@ -39,7 +41,9 @@ api.interceptors.response.use(
           ElMessage.error('请先登录后再操作')
           // 自动跳转到登录页面
           setTimeout(() => {
-            window.location.href = '/login'
+            if (window.location.pathname !== '/login') {
+              window.location.href = '/login'
+            }
           }, 1500)
           break
         case 403:
