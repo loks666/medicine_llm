@@ -1,0 +1,43 @@
+version: '3.8'
+
+# 覆盖配置文件，用于本地开发环境
+services:
+  mysql:
+    environment:
+      # 添加代理配置（如果需要）
+      - http_proxy=http://host.docker.internal:7890
+      - https_proxy=http://host.docker.internal:7890
+      - no_proxy=localhost,127.0.0.1,mysql,redis,backend,frontend
+
+  redis:
+    environment:
+      # 添加代理配置（如果需要）
+      - http_proxy=http://host.docker.internal:7890
+      - https_proxy=http://host.docker.internal:7890
+      - no_proxy=localhost,127.0.0.1,mysql,redis,backend,frontend
+
+  backend:
+    environment:
+      # 添加代理配置（如果需要）
+      - http_proxy=http://host.docker.internal:7890
+      - https_proxy=http://host.docker.internal:7890
+      - no_proxy=localhost,127.0.0.1,mysql,redis,backend,frontend
+    # 开发模式下挂载代码目录
+    volumes:
+      - ./backend:/app
+      - /app/__pycache__
+
+  frontend:
+    environment:
+      # 添加代理配置（如果需要）
+      - http_proxy=http://host.docker.internal:7890
+      - https_proxy=http://host.docker.internal:7890
+      - no_proxy=localhost,127.0.0.1,mysql,redis,backend,frontend
+    # 更新端口为3001
+    ports:
+      - "3001:3000"
+    # 开发模式下挂载代码目录
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: pnpm run dev
