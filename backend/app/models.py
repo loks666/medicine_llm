@@ -1,7 +1,7 @@
 from sqlalchemy import Column, BigInteger, String, DateTime, Text, Enum, ForeignKey, Integer
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from .db import Base
+from app.db import Base
 import enum
 
 class MessageRole(enum.Enum):
@@ -12,7 +12,7 @@ class MessageRole(enum.Enum):
 class User(Base):
     __tablename__ = "users"
     
-    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     username = Column(String(64), unique=True, nullable=False)
     password_hash = Column(String(255), nullable=False)
     created_at = Column(DateTime, nullable=False, default=func.current_timestamp())
@@ -24,8 +24,8 @@ class User(Base):
 class Conversation(Base):
     __tablename__ = "conversations"
     
-    id = Column(BigInteger, primary_key=True, autoincrement=True)
-    user_id = Column(BigInteger, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     title = Column(String(255), nullable=False)
     created_at = Column(DateTime, nullable=False, default=func.current_timestamp())
     
@@ -36,8 +36,8 @@ class Conversation(Base):
 class Message(Base):
     __tablename__ = "messages"
     
-    id = Column(BigInteger, primary_key=True, autoincrement=True)
-    conv_id = Column(BigInteger, ForeignKey("conversations.id", ondelete="CASCADE"), nullable=False)
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    conv_id = Column(Integer, ForeignKey("conversations.id", ondelete="CASCADE"), nullable=False)
     role = Column(Enum(MessageRole), nullable=False)
     content = Column(Text, nullable=False)
     model = Column(String(64), nullable=False)
@@ -51,9 +51,9 @@ class Message(Base):
 class Session(Base):
     __tablename__ = "sessions"
     
-    id = Column(BigInteger, primary_key=True, autoincrement=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     session_id = Column(String(36), unique=True, nullable=False)  # UUID
-    user_id = Column(BigInteger, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     expires_at = Column(DateTime, nullable=False)
     created_at = Column(DateTime, nullable=False, default=func.current_timestamp())
     

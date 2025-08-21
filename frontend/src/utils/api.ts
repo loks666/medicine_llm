@@ -3,7 +3,7 @@ import { ElMessage } from 'element-plus'
 
 // 创建axios实例
 const api: AxiosInstance = axios.create({
-  baseURL: '/api',
+  baseURL: 'http://localhost:8000',
   timeout: 30000,
   withCredentials: true, // 发送cookie
   headers: {
@@ -36,8 +36,11 @@ api.interceptors.response.use(
       
       switch (status) {
         case 401:
-          ElMessage.error('未登录或登录已过期')
-          // 可以在这里处理登录跳转
+          ElMessage.error('请先登录后再操作')
+          // 自动跳转到登录页面
+          setTimeout(() => {
+            window.location.href = '/login'
+          }, 1500)
           break
         case 403:
           ElMessage.error('没有权限访问')
@@ -52,7 +55,7 @@ api.interceptors.response.use(
           ElMessage.error(data?.detail || '请求失败')
       }
     } else if (error.request) {
-      ElMessage.error('网络连接失败')
+      ElMessage.error('网络连接失败，请检查网络或稍后重试')
     } else {
       ElMessage.error('请求配置错误')
     }
@@ -89,7 +92,7 @@ export const createSSEConnection = (url: string, options: {
 } = {}) => {
   const { onMessage, onError, onClose, signal } = options
   
-  const eventSource = new EventSource(`/api${url}`, {
+  const eventSource = new EventSource(`http://localhost:8000${url}`, {
     withCredentials: true
   })
   

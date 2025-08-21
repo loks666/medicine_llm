@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
-from ..db import get_db
-from ..models import User, Message, Conversation
-from ..schemas import MessageRating
-from ..deps import get_current_user
+from app.db import get_db
+from app.models import User, Message, Conversation
+from app.schemas import MessageRating
+from app.deps import get_current_user
 
-router = APIRouter(prefix="/api/messages", tags=["消息管理"])
+router = APIRouter(prefix="/messages", tags=["消息管理"])
 
 @router.post("/{message_id}/rate")
 async def rate_message(

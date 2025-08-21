@@ -31,9 +31,9 @@
         <el-button
           type="text"
           size="small"
-          :icon="message.rating === -1 ? StarFilled : Star"
-          :class="{ active: message.rating === -1, negative: true }"
-          @click="handleRate(-1)"
+          :icon="message.rating === 0 ? StarFilled : Star"
+          :class="{ active: message.rating === 0, negative: true }"
+          @click="handleRate(0)"
         >
           差评
         </el-button>

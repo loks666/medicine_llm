@@ -7,10 +7,10 @@ import os
 from dotenv import load_dotenv
 
 # 导入路由
-from .routers import auth, conversations, chat, messages
-from .db import init_database, check_database_connection
-from .services.session import cleanup_expired_sessions
-from .db import get_db
+from app.routers import auth, conversations, chat, messages
+from app.db import init_database, check_database_connection
+from app.services.session import cleanup_expired_sessions
+from app.db import get_db
 
 load_dotenv()
 
@@ -55,7 +55,7 @@ app = FastAPI(
 # CORS中间件
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:3001", "http://127.0.0.1:3001", "http://localhost:8080", "null"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

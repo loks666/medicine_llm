@@ -1,13 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Response, Request
 from sqlalchemy.orm import Session
-from ..db import get_db
-from ..models import User
-from ..schemas import UserLogin, UserResponse
-from ..services.crypto import verify_password, hash_password
-from ..services.session import create_session, delete_session
-from ..deps import get_current_user, get_optional_user
+from app.db import get_db
+from app.models import User
+from app.schemas import UserLogin, UserResponse
+from app.services.crypto import verify_password, hash_password
+from app.services.session import create_session, delete_session
+from app.deps import get_current_user, get_optional_user
 
-router = APIRouter(prefix="/api/auth", tags=["认证"])
+router = APIRouter(prefix="/auth", tags=["认证"])
 
 @router.post("/login")
 async def login(user_data: UserLogin, response: Response, db: Session = Depends(get_db)):

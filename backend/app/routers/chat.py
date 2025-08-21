@@ -1,16 +1,16 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Dict, Any
 import json
 import asyncio
-from ..db import get_db
-from ..models import User, Conversation, Message, MessageRole
-from ..schemas import ChatRequest, ChatMessage
-from ..deps import get_current_user
-from ..services.chat_gateway import chat_gateway
+from app.db import get_db
+from app.models import User, Conversation, Message, MessageRole
+from app.schemas import ChatRequest, ChatMessage
+from app.deps import get_current_user
+from app.services.chat_gateway import chat_gateway
 
-router = APIRouter(prefix="/api/chat", tags=["聊天"])
+router = APIRouter(prefix="/chat", tags=["聊天"])
 
 # 简单的防刷机制
 user_last_request = {}
@@ -19,7 +19,7 @@ REQUEST_INTERVAL = 2  # 2秒间隔
 @router.get("/models")
 async def get_models():
     """获取可用模型列表"""
-    return ["qwen3", "llama3", "gemma", "deepseek", "kimi"]
+    return ["gemini-1.5-pro", "qwen3-235b-a22b", "deepseek-r1", "llama-3.1-405b", "kimi-k2-0711-preview"]
 
 @router.post("/stream")
 async def stream_chat(

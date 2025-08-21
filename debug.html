@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>前端API调试</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        button { margin: 5px; padding: 10px 15px; }
+        .result { margin-top: 10px; padding: 10px; background: #f5f5f5; white-space: pre-wrap; }
+        .error { background: #ffebee; color: #c62828; }
+        .success { background: #e8f5e8; color: #2e7d32; }
+    </style>
+</head>
+<body>
+    <h1>前端API调试工具</h1>
+    
+    <div class="section">
+        <h3>1. 登录测试</h3>
+        <button onclick="testLogin()">登录 (demo/demo123)</button>
+        <div id="loginResult" class="result"></div>
+    </div>
+    
+    <div class="section">
+        <h3>2. 认证状态检查</h3>
+        <button onclick="checkAuth()">检查认证状态</button>
+        <div id="authResult" class="result"></div>
+    </div>
+    
+    <div class="section">
+        <h3>3. 获取会话列表</h3>
+        <button onclick="getConversations()">获取会话列表</button>
+        <div id="conversationsResult" class="result"></div>
+    </div>
+    
+    <div class="section">
+        <h3>4. 创建新会话</h3>
+        <button onclick="createConversation()">创建新会话</button>
+        <div id="createResult" class="result"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        
+        async function makeRequest(url, options = {}) {
+            try {
+                const response = await fetch(API_BASE + url, {
+                    credentials: 'include',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...options.headers
+                    },
+                    ...options
+                });
+                
+                const data = await response.text();
+                let jsonData;
+                try {
+                    jsonData = JSON.parse(data);
+                } catch {
+                    jsonData = data;
+                }
+                
+                return {
+                    status: response.status,
+                    statusText: response.statusText,
+                    data: jsonData,
+                    headers: Object.fromEntries(response.headers.entries())
+                };
+            } catch (error) {
+                return {
+                    error: error.message,
+                    type: 'network_error'
+                };
+            }
+        }
+        
+        function displayResult(elementId, result) {
+            const element = document.getElementById(elementId);
+            if (result.error) {
+                element.className = 'result error';
+                element.textContent = `错误: ${result.error}`;
+            } else if (result.status >= 200 && result.status < 300) {
+                element.className = 'result success';
+                element.textContent = `成功 (${result.status}): ${JSON.stringify(result.data, null, 2)}`;
+            } else {
+                element.className = 'result error';
+                element.textContent = `失败 (${result.status}): ${JSON.stringify(result.data, null, 2)}`;
+            }
+        }
+        
+        async function testLogin() {
+            const result = await makeRequest('/auth/login', {
+                method: 'POST',
+                body: JSON.stringify({
+                    username: 'demo',
+                    password: 'demo123'
+                })
+            });
+            displayResult('loginResult', result);
+        }
+        
+        async function checkAuth() {
+            const result = await makeRequest('/auth/me');
+            displayResult('authResult', result);
+        }
+        
+        async function getConversations() {
+            const result = await makeRequest('/conversations');
+            displayResult('conversationsResult', result);
+        }
+        
+        async function createConversation() {
+            const result = await makeRequest('/conversations', {
+                method: 'POST',
+                body: JSON.stringify({
+                    title: '测试会话 ' + new Date().toLocaleTimeString()
+                })
+            });
+            displayResult('createResult', result);
+        }
+        
+        // 页面加载时自动检查认证状态
+        window.onload = function() {
+            checkAuth();
+        };
+    </script>
+</body>
+</html>

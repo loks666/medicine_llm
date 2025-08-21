@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
-from ..db import get_db
-from ..models import User, Conversation, Message
-from ..schemas import ConversationCreate, ConversationResponse, ConversationWithMessages
-from ..deps import get_current_user
+from app.db import get_db
+from app.models import User, Conversation, Message
+from app.schemas import ConversationCreate, ConversationResponse, ConversationWithMessages
+from app.deps import get_current_user
 
-router = APIRouter(prefix="/api/conversations", tags=["会话管理"])
+router = APIRouter(prefix="/conversations", tags=["会话管理"])
 
 @router.post("/", response_model=ConversationResponse)
 async def create_conversation(

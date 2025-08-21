@@ -7,13 +7,18 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # 数据库配置
-DB_HOST = os.getenv("DB_HOST", "localhost")
-DB_PORT = os.getenv("DB_PORT", "3306")
-DB_NAME = os.getenv("DB_NAME", "medicine_llm")
-DB_USER = os.getenv("DB_USER", "chatuser")
-DB_PASSWORD = os.getenv("DB_PASSWORD", "chatpass")
+# 优先使用环境变量中的DATABASE_URL，否则使用SQLite作为默认数据库
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./medicine_llm.db")
 
-DATABASE_URL = f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}?charset=utf8mb4"
+# 如果使用MySQL，保留原有配置
+if not DATABASE_URL.startswith("sqlite"):
+    DB_HOST = os.getenv("DB_HOST", "localhost")
+    DB_PORT = os.getenv("DB_PORT", "3307")
+    DB_NAME = os.getenv("DB_NAME", "medicine_llm")
+    DB_USER = os.getenv("DB_USER", "chatuser")
+    DB_PASSWORD = os.getenv("DB_PASSWORD", "chatpass")
+    if not DATABASE_URL:
+        DATABASE_URL = f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}?charset=utf8mb4"
 
 engine = create_engine(DATABASE_URL, echo=False)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

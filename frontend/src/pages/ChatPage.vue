@@ -126,10 +126,7 @@ import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   Plus,
-  Delete,
-  UserFilled,
-  Star,
-  StarFilled
+  UserFilled
 } from '@element-plus/icons-vue'
 import { useAuthStore } from '@/stores/auth'
 import { useChatStore } from '@/stores/chat'
@@ -143,18 +140,6 @@ const chatStore = useChatStore()
 
 const messageInput = ref('')
 const messageListRef = ref<HTMLElement>()
-
-// 格式化时间
-const formatTime = (dateString: string) => {
-  const date = new Date(dateString)
-  const now = new Date()
-  const diff = now.getTime() - date.getTime()
-  
-  if (diff < 60000) return '刚刚'
-  if (diff < 3600000) return `${Math.floor(diff / 60000)}分钟前`
-  if (diff < 86400000) return `${Math.floor(diff / 3600000)}小时前`
-  return date.toLocaleDateString()
-}
 
 
 
@@ -172,8 +157,13 @@ const createNewConversation = async () => {
   try {
     await chatStore.createConversation()
     ElMessage.success('创建新对话成功')
-  } catch (error) {
-    ElMessage.error('创建对话失败')
+  } catch (error: any) {
+    console.error('创建对话失败:', error)
+    // 如果是401错误，说明未登录，不需要额外提示（api拦截器会处理）
+    if (error.response?.status === 401) {
+      return
+    }
+    ElMessage.error('创建对话失败，请稍后重试')
   }
 }
 
