@@ -4,7 +4,14 @@ from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
 import uvicorn
 import os
+import sys
+from pathlib import Path
 from dotenv import load_dotenv
+
+# 解决相对导入问题
+current_dir = Path(__file__).parent.parent
+if str(current_dir) not in sys.path:
+    sys.path.insert(0, str(current_dir))
 
 # 导入路由
 from app.routers import auth, conversations, chat, messages
@@ -55,7 +62,15 @@ app = FastAPI(
 # CORS中间件
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:3001", "http://127.0.0.1:3001", "http://localhost:8080", "null"],
+    allow_origins=[
+        "http://localhost:3000", "http://127.0.0.1:3000",
+        "http://localhost:3001", "http://127.0.0.1:3001", 
+        "http://localhost:3002", "http://127.0.0.1:3002",
+        "http://localhost:3003", "http://127.0.0.1:3003",
+        "http://localhost:8080", "http://127.0.0.1:8080",
+        "http://localhost:5173", "http://127.0.0.1:5173",  # Vite默认端口
+        "null"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -97,7 +112,7 @@ if __name__ == "__main__":
     port = int(os.getenv("APP_PORT", "8000"))
     
     uvicorn.run(
-        "app.main:app",
+        "main:app",
         host=host,
         port=port,
         reload=True
