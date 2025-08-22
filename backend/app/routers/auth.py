@@ -4,6 +4,7 @@ from backend.app.models import User
 from backend.app.schemas import UserLogin, UserResponse
 from backend.app.services.crypto import verify_password, hash_password
 from backend.app.services.session import create_session, delete_session
+from backend.app.services.jwt_auth import create_access_token, get_hardcoded_token
 from backend.app.deps import get_current_user
 
 from backend.app.db import get_db
@@ -11,7 +12,7 @@ from backend.app.db import get_db
 router = APIRouter(prefix="/auth", tags=["认证"])
 
 @router.post("/login")
-async def login(user_data: UserLogin, response: Response, db: Session = Depends(get_db)):
+async def login(user_data: UserLogin, db: Session = Depends(get_db)):
     """用户登录"""
     # 查找用户
     user = db.query(User).filter(User.username == user_data.username).first()
@@ -22,36 +23,35 @@ async def login(user_data: UserLogin, response: Response, db: Session = Depends(
             detail="用户名或密码错误"
         )
     
-    # 创建会话
-    session_id = create_session(db, user.id)
-    
-    # 设置Cookie
-    response.set_cookie(
-        key="sid",
-        value=session_id,
-        httponly=True,
-        secure=False,  # 开发环境设为False，生产环境应为True
-        samesite="lax",
-        max_age=7 * 24 * 60 * 60  # 7天
+    # 创建JWT token
+    access_token = create_access_token(
+        data={"sub": str(user.id), "username": user.username}
     )
     
     return {
-        "id": user.id,
-        "username": user.username
+        "access_token": access_token,
+        "token_type": "bearer",
+        "user": {
+            "id": user.id,
+            "username": user.username
+        }
     }
 
 @router.post("/logout")
-async def logout(request: Request, response: Response, db: Session = Depends(get_db)):
+async def logout():
     """用户登出"""
-    session_id = request.cookies.get("sid")
-    
-    if session_id:
-        delete_session(db, session_id)
-    
-    # 清除Cookie
-    response.delete_cookie(key="sid")
-    
+    # JWT是无状态的，客户端删除token即可
     return {"message": "登出成功"}
+
+@router.get("/hardcoded-token")
+async def get_demo_token():
+    """获取写死的演示token（仅用于开发测试）"""
+    token = get_hardcoded_token()
+    return {
+        "access_token": token,
+        "token_type": "bearer",
+        "message": "这是一个写死的演示token，用于测试JWT认证"
+    }
 
 @router.get("/me", response_model=UserResponse)
 async def get_me(current_user: User = Depends(get_current_user)):

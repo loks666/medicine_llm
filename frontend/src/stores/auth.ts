@@ -1,11 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import { post, get } from '@/utils/api'
-
-interface User {
-  id: string
-  username: string
-}
+import { post, get, tokenManager } from '@/utils/api'
+import type { User } from '@/types'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref<User | null>(null)
@@ -16,13 +12,23 @@ export const useAuthStore = defineStore('auth', () => {
   const login = async (username: string, password: string): Promise<boolean> => {
     loading.value = true
     try {
-      const response = await post<User>('/auth/login', {
+      const response = await post<{
+        access_token: string
+        token_type: string
+        user: User
+      }>('/auth/login', {
         username,
         password
       })
       
       if (response.status === 200) {
-        user.value = response.data
+        const { access_token, user: userData } = response.data
+        
+        // 存储JWT token
+        tokenManager.setToken(access_token)
+        
+        // 设置用户信息
+        user.value = userData
         isAuthenticated.value = true
         return true
       }
@@ -42,6 +48,9 @@ export const useAuthStore = defineStore('auth', () => {
     } catch (error) {
       console.error('Logout failed:', error)
     } finally {
+      // 清除JWT token
+      tokenManager.removeToken()
+      
       user.value = null
       isAuthenticated.value = false
       loading.value = false
@@ -51,6 +60,12 @@ export const useAuthStore = defineStore('auth', () => {
   const checkAuth = async (): Promise<void> => {
     if (isChecked.value) return
     
+    // 检查是否有存储的token
+    if (!tokenManager.hasToken()) {
+      isChecked.value = true
+      return
+    }
+    
     loading.value = true
     try {
       const response = await get<User>('/auth/me')
@@ -59,12 +74,15 @@ export const useAuthStore = defineStore('auth', () => {
         user.value = response.data
         isAuthenticated.value = true
       } else {
-        // 非200状态码，清除认证状态
+        // 非200状态码，清除认证状态和token
+        tokenManager.removeToken()
         user.value = null
         isAuthenticated.value = false
       }
     } catch (error: any) {
       console.error('Auth check failed:', error)
+      // 清除无效token
+      tokenManager.removeToken()
       user.value = null
       isAuthenticated.value = false
       

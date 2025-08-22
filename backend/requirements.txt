@@ -9,4 +9,5 @@ itsdangerous>=2.1.2
 httpx>=0.25.2
 cryptography>=40.0.0
 openai>=1.0.0
+PyJWT>=2.8.0
 sqlalchemy

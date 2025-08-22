@@ -1,11 +1,31 @@
 import axios, { type AxiosInstance, type AxiosResponse } from 'axios'
 import { ElMessage } from 'element-plus'
 
+// JWT Token 管理
+const TOKEN_KEY = 'jwt_token'
+
+export const tokenManager = {
+  getToken(): string | null {
+    return localStorage.getItem(TOKEN_KEY)
+  },
+  
+  setToken(token: string): void {
+    localStorage.setItem(TOKEN_KEY, token)
+  },
+  
+  removeToken(): void {
+    localStorage.removeItem(TOKEN_KEY)
+  },
+  
+  hasToken(): boolean {
+    return !!this.getToken()
+  }
+}
+
 // 创建axios实例
 const api: AxiosInstance = axios.create({
-  baseURL: 'http://localhost:8000/api',
+  baseURL: '/api',
   timeout: 30000,
-  withCredentials: true, // 发送cookie
   headers: {
     'Content-Type': 'application/json'
   }
@@ -14,8 +34,11 @@ const api: AxiosInstance = axios.create({
 // 请求拦截器
 api.interceptors.request.use(
   (config) => {
-    // 确保每个请求都携带凭据
-    config.withCredentials = true
+    // 添加JWT token到请求头
+    const token = tokenManager.getToken()
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
     return config
   },
   (error) => {
@@ -39,6 +62,8 @@ api.interceptors.response.use(
       switch (status) {
         case 401:
           ElMessage.error('请先登录后再操作')
+          // 清除无效token
+          tokenManager.removeToken()
           // 自动跳转到登录页面
           setTimeout(() => {
             if (window.location.pathname !== '/login') {

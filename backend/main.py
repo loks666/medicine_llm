@@ -76,7 +76,7 @@ async def global_exception_handler(request: Request, exc: Exception):
         content={"detail": f"服务器内部错误: {str(exc)}"}
     )
 
-# 注册路由（添加/api前缀）
+# 注册路由（前端已通过baseURL添加/api前缀）
 app.include_router(auth.router, prefix="/api")
 app.include_router(conversations.router, prefix="/api")
 app.include_router(chat.router, prefix="/api")
