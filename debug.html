@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cookie登录测试</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        button { margin: 5px; padding: 10px 15px; }
+        .result { margin-top: 10px; padding: 10px; background: #f5f5f5; white-space: pre-wrap; }
+        .error { background: #ffebee; color: #c62828; }
+        .success { background: #e8f5e8; color: #2e7d32; }
+    </style>
+</head>
+<body>
+    <h1>Cookie登录测试</h1>
+    
+    <div class="section">
+        <h3>1. 登录测试</h3>
+        <button onclick="testLogin()">登录 (demo/demo123)</button>
+        <button onclick="showCookies()">显示Cookie</button>
+        <div id="loginResult" class="result"></div>
+    </div>
+    
+    <div class="section">
+        <h3>2. 认证状态检查</h3>
+        <button onclick="checkAuth()">检查认证状态</button>
+        <div id="authResult" class="result"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        
+        function log(elementId, message, isError = false) {
+            const element = document.getElementById(elementId);
+            const className = isError ? 'result error' : 'result success';
+            element.className = className;
+            element.textContent = message;
+            console.log(message);
+        }
+
+        async function testLogin() {
+            try {
+                const response = await fetch(API_BASE + '/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include', // 重要：包含Cookie
+                    body: JSON.stringify({ 
+                        username: 'demo', 
+                        password: 'demo123' 
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    log('loginResult', `登录成功: ${JSON.stringify(data)}\n状态: ${response.status}`);
+                    
+                    // 延迟一下再自动检查认证
+                    setTimeout(checkAuth, 500);
+                } else {
+                    log('loginResult', `登录失败: ${response.status} - ${JSON.stringify(data)}`, true);
+                }
+                
+            } catch (error) {
+                log('loginResult', `登录错误: ${error.message}`, true);
+            }
+        }
+
+        async function checkAuth() {
+            try {
+                const response = await fetch(API_BASE + '/auth/me', {
+                    method: 'GET',
+                    credentials: 'include', // 重要：包含Cookie
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log('authResult', `认证成功: ${JSON.stringify(data)}`);
+                } else {
+                    const errorData = await response.text();
+                    log('authResult', `认证失败: ${response.status} - ${errorData}`, true);
+                }
+                
+            } catch (error) {
+                log('authResult', `认证错误: ${error.message}`, true);
+            }
+        }
+
+        function showCookies() {
+            const cookies = document.cookie;
+            log('loginResult', `当前Cookie: ${cookies || '(无Cookie)'}`);
+        }
+
+        // 页面加载时显示当前状态
+        window.onload = function() {
+            showCookies();
+            checkAuth();
+        };
+    </script>
+</body>
+</html>
