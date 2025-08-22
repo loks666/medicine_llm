@@ -58,11 +58,20 @@ export const useAuthStore = defineStore('auth', () => {
       if (response.status === 200) {
         user.value = response.data
         isAuthenticated.value = true
+      } else {
+        // 非200状态码，清除认证状态
+        user.value = null
+        isAuthenticated.value = false
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Auth check failed:', error)
       user.value = null
       isAuthenticated.value = false
+      
+      // 如果是网络错误或请求被中断，重新抛出错误
+      if (error.code === 'ERR_ABORTED' || error.message?.includes('aborted') || !error.response) {
+        throw error
+      }
     } finally {
       isChecked.value = true
       loading.value = false

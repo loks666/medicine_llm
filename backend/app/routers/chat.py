@@ -4,11 +4,11 @@ from sqlalchemy.orm import Session
 from typing import List, Dict, Any
 import json
 import asyncio
-from app.db import get_db
-from app.models import User, Conversation, Message, MessageRole
-from app.schemas import ChatRequest, ChatMessage
-from app.deps import get_current_user
-from app.services.chat_gateway import chat_gateway
+from backend.app.db import get_db
+from backend.app.models import User, Conversation, Message, MessageRole
+from backend.app.schemas import ChatRequest, ChatMessage
+from backend.app.deps import get_current_user
+from backend.app.services.chat_gateway import chat_gateway
 
 router = APIRouter(prefix="/chat", tags=["聊天"])
 

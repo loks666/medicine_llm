@@ -1,8 +1,8 @@
 import uuid
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
-from app.models import Session as SessionModel, User
-from app.db import get_db
+from backend.app.models import Session as SessionModel, User
+from backend.app.db import get_db
 import os
 from dotenv import load_dotenv
 

@@ -27,9 +27,22 @@ const router = createRouter({
 router.beforeEach(async (to, _, next) => {
   const authStore = useAuthStore()
   
+  // 对于登录页面，直接允许访问
+  if (to.path === '/login') {
+    next()
+    return
+  }
+  
   // 检查用户认证状态
   if (!authStore.isChecked) {
-    await authStore.checkAuth()
+    try {
+      await authStore.checkAuth()
+    } catch (error) {
+      console.warn('认证检查失败，跳转到登录页面:', error)
+      // 认证检查失败时，跳转到登录页面
+      next('/login')
+      return
+    }
   }
   
   // 需要认证的页面
