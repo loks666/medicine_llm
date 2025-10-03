@@ -1,49 +1,48 @@
-# 医疗大模型测试平台
+﻿# 医疗大模型测试平台
 
 一个基于 FastAPI + Vue3 的医疗大模型对话测试平台，支持多模型切换、会话管理、消息评价等功能。
 
 ## 🚀 功能特性
 
-- **多模型支持**: 支持 OpenAI GPT 系列及兼容 API 的其他大模型
-- **实时对话**: 基于 SSE 的流式对话体验
-- **会话管理**: 创建、切换、删除对话会话
-- **消息评价**: 对 AI 回复进行好评/差评
-- **用户认证**: 基于 Session 的用户登录系统
-- **响应式设计**: 支持桌面端和移动端
-- **Docker 部署**: 一键容器化部署
+- **多模型支持**：支持 OpenAI GPT 系列及兼容 API 的其他大模型
+- **实时对话**：基于 SSE 的流式对话体验
+- **会话管理**：创建、切换、删除对话会话
+- **消息评价**：对 AI 回复进行好评/差评
+- **用户认证**：基于 Session 的用户登录系统
+- **响应式设计**：支持桌面端和移动端
 
 ## 🛠️ 技术栈
 
 ### 后端
-- **FastAPI**: 现代化的 Python Web 框架
-- **MySQL**: 主数据库
-- **Redis**: 缓存和会话存储
-- **SQLAlchemy**: ORM 框架
-- **Pydantic**: 数据验证
-- **Uvicorn**: ASGI 服务器
+- **FastAPI**：现代化的 Python Web 框架
+- **SQLAlchemy**：ORM 框架（默认连接本地 MySQL）
+- **Pydantic**：数据验证
+- **Uvicorn**：ASGI 服务端
+- **Redis**：限流与缓存支持
 
 ### 前端
-- **Vue 3**: 渐进式 JavaScript 框架
-- **TypeScript**: 类型安全的 JavaScript
-- **Element Plus**: Vue 3 UI 组件库
-- **Pinia**: Vue 状态管理
-- **Vue Router**: 路由管理
-- **Vite**: 前端构建工具
+- **Vue 3**：渐进式 JavaScript 框架
+- **TypeScript**：类型安全的 JavaScript
+- **Element Plus**：Vue 3 UI 组件库
+- **Pinia**：Vue 状态管理
+- **Vite**：前端构建工具
 
 ### 部署
-- **Docker**: 容器化部署
-- **Docker Compose**: 多容器编排
-- **Nginx**: 反向代理和静态文件服务
+- **uv**：Python 依赖与环境管理
+- **Docker / Docker Compose（可选）**：一键容器化部署
 
 ## 📦 快速开始
 
 ### 环境要求
 
-- Docker 和 Docker Compose
-- Node.js 18+ (本地开发)
-- Python 3.11+ (本地开发)
+- [uv](https://github.com/astral-sh/uv) 0.8+
+- Python 3.13（由 uv 自动管理）
+- Node.js 18+（前端开发）
+- Docker（本地 MySQL/Redis 由 compose 启动）
 
-### 使用 Docker Compose 部署（推荐）
+> 提示：首次运行会自动在项目根目录创建 `.venv` 虚拟环境，并写入 `.python-version` 指定解释器版本。
+
+### 启动后端（uv）
 
 1. **克隆项目**
    ```bash
@@ -54,88 +53,67 @@
 2. **配置环境变量**
    ```bash
    cp .env.example .env
-   # 编辑 .env 文件，设置你的 OpenAI API Key 等配置
+   # 按需修改 .env
    ```
 
-3. **启动服务**
+3. **启动本地数据库/缓存（MySQL + Redis）**
+   ```powershell
+   cd C:\Programs\Project\docker-compose\database
+   docker compose up -d mysql redis
+   ```
+   > 说明：上述目录包含统一维护的数据库 docker-compose 配置。若在 Linux/Mac，可进入该目录后执行 `docker compose up -d mysql redis`。
+
+4. **启动后端服务（推荐使用脚本）**
+   ```powershell
+   .\start.ps1          # 初始化虚拟环境并同步依赖
+   .\start.ps1 -InitDb  # 首次运行可额外初始化数据库表
+   ```
+
+   或者手动执行：
    ```bash
-   # Windows PowerShell (推荐)
-   .\start.ps1
-   
-   # 或者直接使用 docker-compose
-   docker-compose up -d
+   uv venv --python 3.13
+   uv sync
+   uv run python backend/init_db.py  # 可选：初始化数据表
+   uv run -- uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
    ```
 
-4. **访问应用**
-   - 前端: http://localhost:3001
+5. **停止后端服务**
+   ```powershell
+   .\stop.ps1
+   ```
+   或在运行窗口使用 `Ctrl+C` 结束服务。
+
+6. **访问接口**
    - 后端 API: http://localhost:8000
    - API 文档: http://localhost:8000/docs
 
-5. **停止服务**
-   ```bash
-   # Windows PowerShell
-   .\stop.ps1
-   
-   # 或者直接使用 docker-compose
-   docker-compose down
-   ```
+### 启动前端
 
-### 本地开发
-
-#### 后端开发
-
-1. **进入后端目录**
-   ```bash
-   cd backend
-   ```
-
-2. **创建虚拟环境**
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # Windows: venv\Scripts\activate
-   ```
-
-3. **安装依赖**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. **配置环境变量**
-   ```bash
-   cp ../.env.example .env
-   # 编辑 .env 文件
-   ```
-
-5. **启动数据库**
-   ```bash
-   docker-compose up -d mysql redis
-   ```
-
-6. **运行后端**
-   ```bash
-   uvicorn app.main:app --reload
-   ```
-
-#### 前端开发
-
-1. **进入前端目录**
+1. **安装依赖**
    ```bash
    cd frontend
-   ```
-
-2. **安装依赖**
-   ```bash
    npm install
    ```
 
-3. **启动开发服务器**
+2. **启动开发服务器**
    ```bash
    npm run dev
    ```
 
+   默认访问地址：`http://localhost:3000`
+
+### 使用 Docker（可选）
+
+仍可使用仓库自带的 `docker-compose.yml` 在容器中部署：
+
+```bash
+docker compose up -d
+docker compose down
+```
+
 ## 📝 API 文档
 
-启动后端服务后，访问 http://localhost:8000/docs 查看完整的 API 文档。
+启动后端服务后，访问 http://localhost:8000/docs 查看完整 API 文档。
 
 ### 主要 API 端点
 
@@ -156,13 +134,14 @@
 
 | 变量名 | 说明 | 默认值 |
 |--------|------|--------|
-| `DATABASE_URL` | MySQL 数据库连接 | - |
-| `REDIS_URL` | Redis 连接 | - |
+| `DATABASE_URL` | 数据库连接串，默认指向本地 docker-compose MySQL | `mysql+pymysql://fly_user:jax666@localhost:33061/flyai` |
+| `DB_HOST` / `DB_PORT` / `DB_NAME` / `DB_USER` / `DB_PASSWORD` | MySQL 连接信息（未设置 `DATABASE_URL` 时自动组合） | localhost / 33061 / flyai / fly_user / jax666 |
+| `REDIS_URL` | Redis 连接串，默认指向本地 docker-compose Redis | `redis://:jax666@localhost:63791/0` |
+| `REDIS_HOST` / `REDIS_PORT` / `REDIS_PASSWORD` / `REDIS_DB` | Redis 参数（未显式提供 `REDIS_URL` 时使用） | localhost / 63791 / jax666 / 0 |
 | `SECRET_KEY` | 应用密钥 | - |
 | `OPENAI_API_KEY` | OpenAI API 密钥 | - |
 | `OPENAI_BASE_URL` | OpenAI API 基础 URL | https://api.openai.com/v1 |
-| `DEBUG` | 调试模式 | false |
-| `SESSION_EXPIRE_HOURS` | 会话过期时间（小时） | 24 |
+| `SESSION_EXPIRE_DAYS` | 会话过期时间（天） | 7 |
 
 ### 支持的模型
 
@@ -172,37 +151,31 @@
 - gpt-4-turbo
 - gpt-3.5-turbo
 
-也支持其他兼容 OpenAI API 的服务，如：
-- DeepSeek
-- 阿里云百炼
-- 其他兼容服务
+也支持其他兼容 OpenAI API 的服务，如：DeepSeek、阿里云百炼等。
 
 ## 🗂️ 项目结构
 
 ```
-medical_llm/
+medicine_llm/
 ├── backend/                 # 后端代码
 │   ├── app/
 │   │   ├── models/         # 数据模型
 │   │   ├── routers/        # API 路由
 │   │   ├── services/       # 业务逻辑
-│   │   ├── database.py     # 数据库配置
-│   │   └── main.py         # 应用入口
-│   ├── requirements.txt    # Python 依赖
-│   └── Dockerfile         # 后端 Docker 配置
+│   │   ├── deps.py         # 依赖注入
+│   │   ├── db.py           # 数据库配置
+│   │   └── cache.py        # Redis 客户端
+│   ├── main.py             # 应用入口
+│   ├── init_db.py          # 初始化数据库脚本
+│   └── debug_login.py      # 调试工具
 ├── frontend/               # 前端代码
-│   ├── src/
-│   │   ├── components/     # Vue 组件
-│   │   ├── pages/         # 页面组件
-│   │   ├── stores/        # Pinia 状态管理
-│   │   ├── router/        # 路由配置
-│   │   ├── types/         # TypeScript 类型
-│   │   └── utils/         # 工具函数
-│   ├── package.json       # Node.js 依赖
-│   └── Dockerfile        # 前端 Docker 配置
-├── docker-compose.yml     # Docker Compose 配置
-├── .env.example          # 环境变量模板
-└── README.md            # 项目说明
+│   └── ...
+├── pyproject.toml          # Python 项目配置（uv）
+├── uv.lock                 # 依赖锁定文件
+├── .python-version         # 指定 Python 版本（3.13）
+├── start.ps1               # 本地启动脚本（uv）
+├── stop.ps1                # 本地停止脚本
+└── README.md               # 项目说明
 ```
 
 ## 🤝 贡献指南
@@ -226,11 +199,8 @@ A: 在 `.env` 文件中修改 `OPENAI_BASE_URL` 和 `OPENAI_API_KEY`，支持任
 A: 修改 `backend/app/routers/chat.py` 中的 `get_models` 函数。
 
 ### Q: 数据库迁移怎么处理？
-A: 项目启动时会自动创建数据库表，无需手动迁移。
-
-### Q: 如何配置 HTTPS？
-A: 在生产环境中，建议使用 Nginx 或云服务商的负载均衡器配置 SSL 证书。
+A: 项目启动时会自动创建数据库表；如需手动执行可运行 `uv run python backend/init_db.py`。
 
 ---
 
-⭐ 如果这个项目对你有帮助，请给个 Star！
+如果这个项目对你有帮助，请点个 ⭐️ 支持一下！

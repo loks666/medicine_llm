@@ -1,48 +1,36 @@
-# 医疗大模型测试平台启动脚本
-# PowerShell版本
+﻿param(
+    [switch]$InitDb
+)
 
-Write-Host "=== 医疗大模型测试平台 Docker 启动脚本 ===" -ForegroundColor Green
-Write-Host ""
+Set-Location $PSScriptRoot
 
-# 检查Docker是否运行
-Write-Host "检查Docker状态..." -ForegroundColor Yellow
-try {
-    docker info | Out-Null
-    Write-Host "✓ Docker正在运行" -ForegroundColor Green
-} catch {
-    Write-Host "✗ Docker未运行，请先启动Docker Desktop" -ForegroundColor Red
+Write-Host "=== 医疗大模型测试平台 · 本地启动 ===" -ForegroundColor Green
+Write-Host "请确保本地 MySQL/Redis 已在 C:\Programs\Project\docker-compose\database 中运行 (docker compose up -d mysql redis)" -ForegroundColor Cyan
+
+if (-not (Get-Command uv -ErrorAction SilentlyContinue)) {
+    Write-Host "未检测到 uv，请参考 https://github.com/astral-sh/uv 安装" -ForegroundColor Red
     exit 1
 }
 
-# 检查是否存在.env文件
-if (-not (Test-Path ".env")) {
-    Write-Host "创建.env文件..." -ForegroundColor Yellow
-    Copy-Item ".env.example" ".env"
-    Write-Host "✓ 已创建.env文件，请根据需要修改配置" -ForegroundColor Green
+if (-not (Test-Path '.env')) {
+    Write-Host "创建 .env 文件..." -ForegroundColor Yellow
+    Copy-Item '.env.example' '.env'
+    Write-Host "已创建 .env，请按需修改配置" -ForegroundColor Green
 }
 
-# 停止现有容器（如果存在）
-Write-Host "停止现有容器..." -ForegroundColor Yellow
-docker-compose down
+if (-not (Test-Path '.venv')) {
+    Write-Host "创建 Python 3.13 虚拟环境 (.venv)..." -ForegroundColor Yellow
+    uv venv --python 3.13
+}
 
-# 构建并启动服务
-Write-Host "构建并启动服务..." -ForegroundColor Yellow
-docker-compose up --build -d
+Write-Host "同步 Python 依赖..." -ForegroundColor Yellow
+uv sync
 
-# 等待服务启动
-Write-Host "等待服务启动..." -ForegroundColor Yellow
-Start-Sleep -Seconds 10
+if ($InitDb) {
+    Write-Host "初始化数据库表..." -ForegroundColor Yellow
+    uv run python backend/init_db.py
+}
 
-# 检查服务状态
-Write-Host "检查服务状态..." -ForegroundColor Yellow
-docker-compose ps
-
-Write-Host ""
-Write-Host "=== 服务启动完成 ===" -ForegroundColor Green
-Write-Host "前端地址: http://localhost:3001" -ForegroundColor Cyan
-Write-Host "后端API: http://localhost:8000" -ForegroundColor Cyan
-Write-Host "API文档: http://localhost:8000/docs" -ForegroundColor Cyan
-Write-Host ""
-Write-Host "查看日志: docker-compose logs -f" -ForegroundColor Yellow
-Write-Host "停止服务: docker-compose down" -ForegroundColor Yellow
-Write-Host ""
+Write-Host "启动本地后端服务: http://localhost:8000" -ForegroundColor Cyan
+Write-Host "按 Ctrl+C 可退出" -ForegroundColor Yellow
+uv run -- uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload

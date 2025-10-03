@@ -1,0 +1,40 @@
+[build-system]
+requires = ["hatchling>=1.14"]
+build-backend = "hatchling.build"
+
+[project]
+name = "medicine-llm-backend"
+version = "0.1.0"
+description = "Medical LLM testing platform backend"
+readme = "README.md"
+requires-python = ">=3.13,<3.14"
+authors = [{ name = "Project Authors" }]
+dependencies = [
+    "fastapi>=0.104.1",
+    "uvicorn[standard]>=0.24.0",
+    "python-dotenv>=1.0.0",
+    "pydantic>=2.5.0",
+    "sqlalchemy>=2.0.23",
+    "pymysql>=1.1.0",
+    "bcrypt>=4.1.2",
+    "itsdangerous>=2.1.2",
+    "httpx>=0.25.2",
+    "cryptography>=40.0.0",
+    "openai>=1.0.0",
+    "PyJWT>=2.8.0",
+    "redis>=5.0.0"
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["backend/app"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "backend/app",
+    "backend/main.py",
+    "backend/init_db.py",
+    "backend/debug_login.py"
+]
+
+[tool.uv]
+default-groups = []

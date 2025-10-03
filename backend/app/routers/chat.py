@@ -9,11 +9,12 @@ from backend.app.models import User, Conversation, Message, MessageRole
 from backend.app.schemas import ChatRequest, ChatMessage
 from backend.app.deps import get_current_user
 from backend.app.services.chat_gateway import chat_gateway
+from backend.app.cache import get_redis
 
 router = APIRouter(prefix="/chat", tags=["聊天"])
 
 # 简单的防刷机制
-user_last_request = {}
+fallback_last_request = {}  # Redis 不可用时使用内存限流
 REQUEST_INTERVAL = 2  # 2秒间隔
 
 @router.get("/models")
@@ -29,17 +30,33 @@ async def stream_chat(
 ):
     """SSE流式聊天"""
     import time
-    
-    # 简单防刷
-    current_time = time.time()
-    if current_user.id in user_last_request:
-        if current_time - user_last_request[current_user.id] < REQUEST_INTERVAL:
-            raise HTTPException(
-                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                detail="请求过于频繁，请稍后再试"
-            )
-    user_last_request[current_user.id] = current_time
-    
+
+    redis_client = get_redis()
+    throttled = False
+    if redis_client is not None:
+        rate_key = f"chat:rate-limit:{current_user.id}"
+        try:
+            allowed = await redis_client.set(rate_key, "1", ex=REQUEST_INTERVAL, nx=True)
+            if not allowed:
+                throttled = True
+        except Exception as exc:
+            print(f"Redis 限流异常: {exc}")
+            redis_client = None
+
+    if redis_client is None:
+        current_time = time.time()
+        last_request = fallback_last_request.get(current_user.id)
+        if last_request and current_time - last_request < REQUEST_INTERVAL:
+            throttled = True
+        else:
+            fallback_last_request[current_user.id] = current_time
+
+    if throttled:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="请求过于频繁，请稍后再试"
+        )
+
     # 验证会话权限
     conversation = db.query(Conversation).filter(
         Conversation.id == chat_request.conv_id,
